@@ -25,9 +25,12 @@ WHITE     = (255, 255, 255)
 BLACK     = (  0,   0,   0)  
 RED       = (255,   0,   0)  
 GREEN     = (  0, 255,   0)  
+BLUE    = (0, 0, 255)
+YELLOW = (255, 200, 0)
 DARKGREEN = (  0, 155,   0) 
 DARKGRAY  = ( 40,  40,  40)  
 BGCOLOR = BLACK  
+colors = [WHITE, RED, BLUE, YELLOW]
 
 UP = 'up'  
 DOWN = 'down'  
@@ -89,20 +92,19 @@ def terminate():
     sys.exit()
 
 
-def drawApple(appleLocation):
+def drawApple(appleLocation, apple_color):
     apple = pygame.Rect(appleLocation[X]*CELL_SIZE, appleLocation[Y]*CELL_SIZE, CELL_SIZE, CELL_SIZE)
-    pygame.draw.rect(DISPLAY_SURF, RED, apple)
+    pygame.draw.rect(DISPLAY_SURF, apple_color, apple)
 
-
-def drawSnake(snakeCoords):
+def drawSnake(snakeCoords,snake_color):
     for segment in snakeCoords:
         snakeBodySeg = pygame.Rect(segment[X]*CELL_SIZE, segment[Y]*CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(DISPLAY_SURF, GREEN, snakeBodySeg)
+        pygame.draw.rect(DISPLAY_SURF, snake_color, snakeBodySeg)
         snakeBodySeg = pygame.Rect(segment[X]*CELL_SIZE+2, segment[Y]*CELL_SIZE+2, CELL_SIZE-4, CELL_SIZE-4)
         pygame.draw.rect(DISPLAY_SURF, DARKGREEN, snakeBodySeg)
 
 def drawScore(score):
-    score_text = BASIC_FONT.render(str(score), True, WHITE)
+    score_text = BASIC_FONT.render(str(score), True, WHITE, BLACK)
     DISPLAY_SURF.blit(score_text, (WINDOW_WIDTH/10, WINDOW_HEIGHT//8))
 
 
@@ -143,6 +145,8 @@ def runGame():
     startY = CELL_HEIGHT // 2
     snakeCoords = [(startX, startY)]
     direction = random.choice([RIGHT, LEFT, UP, DOWN])
+    apple_color = random.choice(colors)
+    snake_color = GREEN
     apple = getRandomLocation(snakeCoords)  # to be implemented
     score = 0
     
@@ -188,7 +192,9 @@ def runGame():
             return
         #apple collision
         if snakeCoords[HEAD] == apple:
+            snake_color = apple_color
             apple = getRandomLocation(snakeCoords)
+            apple_color = random.choice(colors)
             score += 1
         else:
             snakeCoords.pop()
@@ -199,8 +205,8 @@ def runGame():
         ## Draw stuff then update screen
         
         drawGrid()
-        drawSnake(snakeCoords)
-        drawApple(apple)
+        drawSnake(snakeCoords, snake_color)
+        drawApple(apple, apple_color)
         drawScore(score)
         
         pygame.display.update()
