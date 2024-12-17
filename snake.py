@@ -25,9 +25,12 @@ WHITE     = (255, 255, 255)
 BLACK     = (  0,   0,   0)  
 RED       = (255,   0,   0)  
 GREEN     = (  0, 255,   0)  
+BLUE    = (0, 0, 255)
+YELLOW = (255, 200, 0)
 DARKGREEN = (  0, 155,   0) 
 DARKGRAY  = ( 40,  40,  40)  
 BGCOLOR = BLACK  
+colors = [WHITE, RED, BLUE, YELLOW]
 
 UP = 'up'  
 DOWN = 'down'  
@@ -53,7 +56,7 @@ def main():
 def showStartScreen():
     print("Start the Snake Game!!!")
                             # Hover over render to see what the params mean
-    instText = BASIC_FONT.render("Use wasd or Arrows to turn.", False, RED, BLACK)
+    instText = BASIC_FONT.render("Use wasd or Arrows to turn.", True, RED, BLACK)
     startText = BASIC_FONT.render("Press Any key to start", True, GREEN, BLACK)
     DISPLAY_SURF.fill(BLACK)
     DISPLAY_SURF.blit(instText, (WINDOW_WIDTH/10, WINDOW_HEIGHT//8))
@@ -89,17 +92,20 @@ def terminate():
     sys.exit()
 
 
-def drawApple(appleLocation):
+def drawApple(appleLocation, apple_color):
     apple = pygame.Rect(appleLocation[X]*CELL_SIZE, appleLocation[Y]*CELL_SIZE, CELL_SIZE, CELL_SIZE)
-    pygame.draw.rect(DISPLAY_SURF, RED, apple)
+    pygame.draw.rect(DISPLAY_SURF, apple_color, apple)
 
-
-def drawSnake(snakeCoords):
+def drawSnake(snakeCoords,snake_color):
     for segment in snakeCoords:
         snakeBodySeg = pygame.Rect(segment[X]*CELL_SIZE, segment[Y]*CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(DISPLAY_SURF, GREEN, snakeBodySeg)
+        pygame.draw.rect(DISPLAY_SURF, snake_color, snakeBodySeg)
         snakeBodySeg = pygame.Rect(segment[X]*CELL_SIZE+2, segment[Y]*CELL_SIZE+2, CELL_SIZE-4, CELL_SIZE-4)
         pygame.draw.rect(DISPLAY_SURF, DARKGREEN, snakeBodySeg)
+
+def drawScore(score):
+    score_text = BASIC_FONT.render(str(score), True, WHITE, BLACK)
+    DISPLAY_SURF.blit(score_text, (WINDOW_WIDTH/10, WINDOW_HEIGHT//8))
 
 
 def showGameOverScreen():
@@ -123,6 +129,7 @@ def showGameOverScreen():
                 if event.key == K_ESCAPE:  
                     terminate()
                 # Improve to start game again...
+                return
 
 
 def getRandomLocation(snakeCoords):
@@ -138,7 +145,10 @@ def runGame():
     startY = CELL_HEIGHT // 2
     snakeCoords = [(startX, startY)]
     direction = random.choice([RIGHT, LEFT, UP, DOWN])
+    apple_color = random.choice(colors)
+    snake_color = GREEN
     apple = getRandomLocation(snakeCoords)  # to be implemented
+    score = 0
     
     # Event handling loop
     while True: 
@@ -147,13 +157,13 @@ def runGame():
             if event.type == QUIT:  
                 terminate()   # to be implemented pygame.quit() then sys.exit()
             elif event.type == KEYDOWN: 
-                if (event.key == K_LEFT or event.key == K_a): 
+                if direction != RIGHT and (event.key == K_LEFT or event.key == K_a): 
                     direction = LEFT  
-                elif (event.key == K_RIGHT or event.key == K_d):  
+                elif direction != LEFT and (event.key == K_RIGHT or event.key == K_d):  
                     direction = RIGHT  
-                elif (event.key == K_UP or event.key == K_w):  
+                elif direction != DOWN and (event.key == K_UP or event.key == K_w):  
                     direction = UP  
-                elif (event.key == K_DOWN or event.key == K_s):  
+                elif direction != UP and (event.key == K_DOWN or event.key == K_s):  
                     direction = DOWN 
                 elif event.key == K_ESCAPE:  
                     terminate()
@@ -175,18 +185,29 @@ def runGame():
         snakeCoords.insert(0,newHead)
         # Check for collision If the snake collides what should it do
         #       What is it colliding with ?
+        if snakeCoords[HEAD][X] > CELL_WIDTH or snakeCoords[HEAD][X] < 0 or snakeCoords[HEAD][Y] > CELL_HEIGHT or snakeCoords[HEAD][Y] < 0:
+            return # stop runGame() function
+        #check for self-collision
+        elif snakeCoords[HEAD] in snakeCoords[1:]:
+            return
+        #apple collision
+        if snakeCoords[HEAD] == apple:
+            snake_color = apple_color
+            apple = getRandomLocation(snakeCoords)
+            apple_color = random.choice(colors)
+            score += 1
+        else:
+            snakeCoords.pop()
 
-        
-        
         ## ~~~~~End of Logic Section~~~ ##
         
         
         ## Draw stuff then update screen
         
         drawGrid()
-        drawSnake(snakeCoords)
-        drawApple(apple)
-        # drawScore 
+        drawSnake(snakeCoords, snake_color)
+        drawApple(apple, apple_color)
+        drawScore(score)
         
         pygame.display.update()
         FPS_CLOCK.tick(FPS)
